@@ -3,7 +3,7 @@ curl \
   --noproxy '*' \
   -v \
   --request POST \
-  --location 'http://54.193.29.190:3030' \
+  --location 'http://99.48.167.162:3030' \
   --header 'Content-Type: application/json' \
   --data-raw '{
     "jsonrpc": "2.0",
