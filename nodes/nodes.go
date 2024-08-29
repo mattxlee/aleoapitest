@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -70,19 +71,19 @@ func SaveNodesToFile(nodes []string, filename string) error {
 func TestNodesFromUrl(url string) ([]string, error) {
 	nodeList, err := retrieveNodeList(url)
 	if err != nil {
-		fmt.Println("failed to get node list, reason: ", err)
+		return nil, fmt.Errorf("failed to get node list: %w", err)
 	}
 	const replacedPort = "3030"
 	var successfulNodes []string
 	for _, node := range nodeList {
 		ip, err := testNode(node, replacedPort)
 		if err != nil {
-			fmt.Printf("Failed to connect to %s: %v\n", *ip, err)
+			log.Println("testNode failed: ", err)
 			continue
 		}
 		newNode := net.JoinHostPort(*ip, replacedPort)
 		successfulNodes = append(successfulNodes, newNode)
-		fmt.Printf("Successfully connected to %s\n", *ip)
+		log.Printf("Successfully connected to %s\n", *ip)
 	}
 	return successfulNodes, nil
 }
@@ -100,13 +101,13 @@ func retrieveNodeList(url string) ([]string, error) {
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("cannot read body, reason: %v", err)
+		return nil, err
 	}
 
 	var nodeList []string
 	err = json.Unmarshal(body, &nodeList)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse JSON: %v", err)
+		return nil, err
 	}
 
 	return nodeList, nil
@@ -120,9 +121,10 @@ func testNode(entry string, replacedPort string) (*string, error) {
 	ip := parts[0]
 	port := replacedPort
 
-	conn, err := net.DialTimeout("tcp", net.JoinHostPort(ip, port), 5*time.Second)
+	host := net.JoinHostPort(ip, port)
+	conn, err := net.DialTimeout("tcp", host, 5*time.Second)
 	if err != nil {
-		return &ip, fmt.Errorf("failed to connect to %s: %v", entry, err)
+		return &ip, err
 	}
 	defer conn.Close()
 
