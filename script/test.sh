@@ -1,5 +1,6 @@
 #!/bin/sh
 curl \
+  --noproxy '*' \
   -v \
   --request POST \
   --location 'http://54.193.29.190:3030' \
